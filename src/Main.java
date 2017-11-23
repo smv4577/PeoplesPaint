@@ -1,13 +1,17 @@
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-
-import javax.swing.BoxLayout;
+import java.awt.event.MouseMotionListener;
+import java.util.LinkedList;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JFrame;
@@ -29,6 +33,7 @@ public class Main extends JFrame {
 	private JColorChooser colorSwatch;
 	private JPanel drawButtons;
 	private eventHandler cl = new eventHandler();
+	private LinkedList<Point> points = new LinkedList<Point>();
 
 	/**
 	 * Creates window
@@ -58,6 +63,8 @@ public class Main extends JFrame {
 		colorSwatch.getSelectionModel().addChangeListener(cl);
 		drawButtons = buildDrawPanel();
 		cp.add(drawButtons, BorderLayout.WEST);
+		cp.addMouseListener(cl);
+		cp.addMouseMotionListener(cl);
 
 	}
 
@@ -67,25 +74,25 @@ public class Main extends JFrame {
 	 */
 	private JPanel buildDrawPanel() {
 		JPanel dp = new JPanel();
-		dp.setLayout(new GridLayout(0,1));
+		dp.setLayout(new GridLayout(0, 1));
 		dp.setSize(new Dimension((int) windowWidth, (int) windowHeight));
-		
+
 		JButton drawButton = new JButton("Free Draw");
 		drawButton.addMouseListener(cl);
 		dp.add(drawButton);
-		
+
 		JButton lineButton = new JButton("Line");
 		lineButton.addMouseListener(cl);
 		dp.add(lineButton);
-		
+
 		JButton recButton = new JButton("Rectangle");
 		lineButton.addMouseListener(cl);
 		dp.add(recButton);
-		
+
 		JButton eButton = new JButton("Erase");
 		lineButton.addMouseListener(cl);
 		dp.add(eButton);
-		
+
 		JButton fillButton = new JButton("Fill");
 		dp.addMouseListener(cl);
 		dp.add(fillButton);
@@ -93,12 +100,29 @@ public class Main extends JFrame {
 		return dp;
 	}
 
+	public void paint(Graphics g) {
+		super.paint(g);
+		g.setColor(Color.BLACK);
+		for (int i = 0; i < points.size() - 1; i++)
+			g.drawLine(points.get(i).x, points.get(i).y, points.get(i + 1).x, points.get(i + 1).y);
+	}
+
 	/**
 	 * 
 	 * @author tln86
 	 *
 	 */
-	private class eventHandler implements ChangeListener, MouseListener {
+	private class eventHandler implements ChangeListener, MouseListener, MouseMotionListener {
+		// private Graphics g = drawingPanel.getGraphics();
+		// private Color drawColor; // we need to be able to change the color based off
+		// what the user wants
+		// private Graphics2D g2 = (Graphics2D) g;
+		// private BasicStroke lineWidth;
+
+		private int startX;
+		private int startY;
+		private int lastX;
+		private int lastY;
 
 		@Override
 		public void stateChanged(ChangeEvent arg0) {
@@ -109,34 +133,61 @@ public class Main extends JFrame {
 
 		@Override
 		public void mouseClicked(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
+
 		}
 
 		@Override
 		public void mouseEntered(MouseEvent arg0) {
 			// TODO Auto-generated method stub
-			
+
 		}
 
 		@Override
 		public void mouseExited(MouseEvent arg0) {
 			// TODO Auto-generated method stub
-			
+
 		}
 
 		@Override
 		public void mousePressed(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
+			points.add(new Point(arg0.getX(), arg0.getY()));
+			startX = arg0.getX();
+			startY = arg0.getY();
+
+			// initialize lastX, lastY
+			lastX = startX;
+			lastY = startY;
+
+			repaint();
+
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
+			points.clear();
 		}
 
+		@Override
+		public void mouseDragged(MouseEvent arg0) {
+			points.add(new Point(arg0.getX(), arg0.getY()));
+			Graphics g = drawingPanel.getGraphics();
+			Graphics2D g2 = (Graphics2D) g;
+			g2.setStroke(new BasicStroke(10));
+			g.setXORMode(drawingPanel.getBackground());
+
+			g.drawLine(points.get(points.size() - 1).x, points.get(points.size() - 1).y, points.get(points.size() - 2).x, points.get(points.size() - 2).y);
+
+			g.drawLine(points.get(points.size() - 1).x, points.get(points.size() - 1).y, arg0.getX(), arg0.getY());
+			//lastX = points.get(points.size() - 1).x;
+			//lastY = points.get(points.size() - 1).y;
+
+		}
+
+		@Override
+		public void mouseMoved(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+
+		}
 
 	}
 
